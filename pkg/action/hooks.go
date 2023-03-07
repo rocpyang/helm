@@ -26,6 +26,10 @@ import (
 	helmtime "helm.sh/helm/v3/pkg/time"
 )
 
+func (cfg *Configuration) ExecHook(rl *release.Release, hook release.HookEvent, timeout time.Duration) error {
+	return cfg.execHook(rl, hook, timeout)
+}
+
 // execHook executes all of the hooks for the given hook event.
 func (cfg *Configuration) execHook(rl *release.Release, hook release.HookEvent, timeout time.Duration) error {
 	executingHooks := []*release.Hook{}
