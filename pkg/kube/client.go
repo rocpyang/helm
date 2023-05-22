@@ -437,7 +437,7 @@ func deleteResource(info *resource.Info) error {
 	return err
 }
 
-func createPatch(target *resource.Info, current runtime.Object) ([]byte, types.PatchType, error) {
+func createPatch(c *Client, target *resource.Info, current runtime.Object) ([]byte, types.PatchType, error) {
 	oldData, err := json.Marshal(current)
 	if err != nil {
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "serializing current configuration")
@@ -482,7 +482,10 @@ func createPatch(target *resource.Info, current runtime.Object) ([]byte, types.P
 	if err != nil {
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "unable to create patch metadata from object")
 	}
-
+	c.Log("Patch oldData %s ", string(oldData))
+	c.Log("Patch newData %s ", string(newData))
+	c.Log("Patch currentData %s ", string(currentData))
+	c.Log("Patch patchMeta %s ", patchMeta)
 	patch, err := strategicpatch.CreateThreeWayMergePatch(oldData, newData, currentData, patchMeta, true)
 	return patch, types.StrategicMergePatchType, err
 }
@@ -503,10 +506,12 @@ func updateResource(c *Client, target *resource.Info, currentObj runtime.Object,
 		}
 		c.Log("Replaced %q with kind %s for kind %s", target.Name, currentObj.GetObjectKind().GroupVersionKind().Kind, kind)
 	} else {
-		patch, patchType, err := createPatch(target, currentObj)
+		patch, patchType, err := createPatch(c, target, currentObj)
 		if err != nil {
 			return errors.Wrap(err, "failed to create patch")
 		}
+		c.Log("Patch %s ", string(patch))
+		c.Log("patchType %s ", patchType)
 
 		if patch == nil || string(patch) == "{}" {
 			c.Log("Looks like there are no changes for %s %q", kind, target.Name)
